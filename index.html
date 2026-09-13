@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Щоденник — шкільна платформа</title>
+<style>
+  :root{
+    --paper:#F1E8D8;
+    --paper-dark:#E7DBC4;
+    --ink:#2B2620;
+    --ink-soft:#5A5245;
+    --maroon:#7A2E2E;
+    --maroon-dark:#5E2222;
+    --chalk:#2F4F3D;
+    --chalk-light:#3E6650;
+    --brass:#AB824A;
+    --brass-light:#D8B876;
+    --sky:#3B5B72;
+    --sky-light:#557790;
+    --line:#C9BC9F;
+    --danger:#8C3B34;
+    --ok:#3D6B4A;
+    --radius:3px;
+    --shadow: 2px 2px 0 rgba(43,38,32,0.08);
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-head: Georgia, "Iowan Old Style", Palatino, "Book Antiqua", serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--paper);
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px);
+    background-size: 100% 28px;
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height:1.45;
+    min-height:100vh;
+  }
+  #app{max-width: 920px; margin: 0 auto; padding-bottom: 60px;}
+  a{color:inherit;}
+  button{font-family:inherit;}
+  ::selection{background: var(--brass-light);}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    background: var(--maroon);
+    color:#F1E8D8;
+    padding: 14px 16px 10px;
+    position: sticky; top:0; z-index: 20;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.15);
+  }
+  .topbar-row{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .brand{
+    font-family: var(--font-head);
+    font-size: 20px;
+    letter-spacing: 0.2px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .brand .mark{
+    display:inline-block; width:26px; height:26px; border-radius:50%;
+    background: var(--brass-light); color: var(--maroon-dark);
+    text-align:center; line-height:26px; font-size:14px; font-family:var(--font-body); font-weight:700;
+  }
+  .who{display:flex; align-items:center; gap:8px; font-size:13px;}
+  .who .av{
+    width:30px; height:30px; border-radius:50%; background: var(--brass-light);
+    display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;
+    border: 2px solid rgba(255,255,255,0.5);
+  }
+  .who .nm{font-weight:600;}
+  .btn-ghost-topbar{
+    background:transparent; border:1px solid rgba(255,255,255,0.4); color:#fff;
+    padding:5px 10px; border-radius: var(--radius); font-size:12px; cursor:pointer;
+  }
+  .btn-ghost-topbar:hover{background:rgba(255,255,255,0.12);}
+
+  /* ---------- Tab rail (diary tabs) ---------- */
+  .tabrail{
+    display:flex; gap:6px; overflow-x:auto; margin-top:12px; padding-bottom:2px;
+    scrollbar-width: thin;
+  }
+  .tabrail::-webkit-scrollbar{height:4px;}
+  .tab{
+    flex: 0 0 auto;
+    background: var(--paper);
+    color: var(--ink-soft);
+    border: none;
+    padding: 8px 14px 7px;
+    font-size: 13px;
+    font-weight:600;
+    cursor:pointer;
+    clip-path: polygon(8% 0, 100% 0, 92% 100%, 0% 100%);
+    white-space:nowrap;
+  }
+  .tab.active{ background: var(--paper-dark); color: var(--maroon); }
+
+  /* ---------- Content panel ---------- */
+  .panel{
+    background: var(--paper);
+    border: 1px solid var(--line);
+    margin: 14px 12px;
+    padding: 16px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .panel h2{
+    font-family: var(--font-head);
+    margin:0 0 12px;
+    font-size:19px;
+    color: var(--maroon);
+    padding-bottom:8px;
+    border-bottom: 2px solid var(--line);
+  }
+  .panel h3{ font-family: var(--font-head); font-size:15px; margin: 18px 0 8px; color: var(--chalk); }
+  .subtle{color: var(--ink-soft); font-size:13px;}
+  .empty-note{
+    border: 1px dashed var(--line); padding: 14px; text-align:center; color: var(--ink-soft);
+    font-size:13px; border-radius: var(--radius);
+  }
+
+  /* ---------- Form controls ---------- */
+  label{display:block; font-size:12px; color:var(--ink-soft); margin: 10px 0 4px; font-weight:600;}
+  input[type=text], input[type=password], input[type=number], input[type=date], select, textarea{
+    width:100%; padding:9px 10px; border:1px solid var(--line); border-radius: var(--radius);
+    background:#FBF7ED; font-family:inherit; font-size:14px; color:var(--ink);
+  }
+  textarea{resize:vertical; min-height:70px;}
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--sky); outline-offset:1px;}
+  .row{display:flex; gap:10px; flex-wrap:wrap;}
+  .row > *{flex:1; min-width:120px;}
+
+  .btn{
+    display:inline-block; padding:9px 16px; border-radius: var(--radius); border:none;
+    font-weight:700; font-size:13px; cursor:pointer; margin-top:10px;
+  }
+  .btn-primary{ background: var(--maroon); color:#fff; }
+  .btn-primary:hover{ background: var(--maroon-dark); }
+  .btn-secondary{ background: var(--chalk); color:#fff; }
+  .btn-secondary:hover{ background: var(--chalk-light); }
+  .btn-brass{ background: var(--brass); color:#2B2620; }
+  .btn-danger{ background: var(--danger); color:#fff; }
+  .btn-outline{ background:transparent; border:1px solid var(--line); color:var(--ink); }
+  .btn-sm{ padding:5px 10px; font-size:12px; margin-top:0; }
+  .btn:disabled{opacity:0.45; cursor:not-allowed;}
+
+  .pill{
+    display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:700;
+  }
+  .pill-ok{background:#E1EBE3; color:var(--ok);}
+  .pill-wait{background:#F4E7CB; color:#8A6A2A;}
+  .pill-bad{background:#F1DCDA; color:var(--danger);}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th,td{ text-align:left; padding:7px 6px; border-bottom:1px solid var(--line); }
+  th{color:var(--ink-soft); font-size:11px; text-transform: none; font-weight:700;}
+
+  .card{
+    border:1px solid var(--line); border-radius:var(--radius); padding:12px; margin-bottom:10px; background:#FBF7ED;
+  }
+  .card-title{font-weight:700; display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  .grade-chip{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:26px; height:26px; border-radius:50%; font-weight:700; font-size:13px; color:#fff; background:var(--sky);
+  }
+  .grade-chip.g-low{background:var(--danger);}
+  .grade-chip.g-mid{background:var(--brass);}
+  .grade-chip.g-high{background:var(--ok);}
+
+  /* login */
+  .login-wrap{ display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px; }
+  .login-card{
+    background:var(--paper); border:1px solid var(--line); box-shadow: 4px 4px 0 rgba(43,38,32,0.15);
+    padding:26px 24px; width:100%; max-width:340px; border-radius: var(--radius);
+  }
+  .login-card h1{ font-family: var(--font-head); color:var(--maroon); font-size:22px; margin:0 0 4px;}
+  .login-err{ color:var(--danger); font-size:13px; margin-top:8px; min-height:16px; }
+
+  /* chat */
+  .chat-box{ height: 340px; overflow-y:auto; border:1px solid var(--line); background:#FBF7ED; padding:10px; margin-bottom:8px; border-radius:var(--radius);}
+  .msg{ margin-bottom:10px; max-width:85%; }
+  .msg .meta{font-size:11px; color:var(--ink-soft); margin-bottom:2px;}
+  .msg .bubble{background:#fff; border:1px solid var(--line); padding:7px 10px; border-radius:var(--radius); display:inline-block;}
+  .msg.mine{margin-left:auto; text-align:right;}
+  .msg.mine .bubble{background: var(--sky); color:#fff; border-color:var(--sky);}
+
+  /* notebook themes */
+  .nb-editor{min-height:260px; padding:14px; border-radius:var(--radius); outline:none; border:1px solid var(--line);}
+  .nb-theme-cream{background:#F6EFDD repeating-linear-gradient(#F6EFDD, #F6EFDD 27px, #D9CBA8 28px); color:#2B2620;}
+  .nb-theme-grid{background:#fff repeating-linear-gradient(0deg,#fff,#fff 23px,#DCE9F2 24px), repeating-linear-gradient(90deg,transparent,transparent 23px,#DCE9F2 24px); color:#1c2b36;}
+  .nb-theme-dark{background:#1E2E24 repeating-linear-gradient(#1E2E24,#1E2E24 27px,#33473A 28px); color:#EAF3EC; font-family:var(--font-head);}
+  .nb-theme-kraft{background:#C9A876; color:#3B2A16;}
+  .nb-theme-pink{background:#F6DEE6 repeating-linear-gradient(#F6DEE6,#F6DEE6 27px,#E9BFCE 28px); color:#5A2436;}
+  .nb-theme-mint{background:#DCEFE3 repeating-linear-gradient(#DCEFE3,#DCEFE3 27px,#BFE0CE 28px); color:#1F4230;}
+  .nb-theme-sticky{background:#FBE889; color:#4a4322; box-shadow: inset 0 0 0 6px #F3DE6E;}
+  .nb-theme-vintage{background:#E7D9B8; color:#4a3a20; font-family: var(--font-head); box-shadow: inset 0 0 40px rgba(120,90,40,0.25);}
+  .nb-theme-blueprint{background:#0F3C5F repeating-linear-gradient(0deg,#0F3C5F,#0F3C5F 23px,#1C5588 24px), repeating-linear-gradient(90deg,transparent,transparent 23px,#1C5588 24px); color:#DCEBF7;}
+  .nb-theme-redline{background:#fff; color:#222; border-left:3px solid #C0504D; background-image: linear-gradient(#CFE0EF 1px, transparent 1px); background-size:100% 26px; padding-left:26px;}
+  .nb-theme-night{background:#101425; color:#EFEFFA;}
+  .nb-theme-choco{background:#3B2A22 repeating-linear-gradient(#3B2A22,#3B2A22 27px,#4C382D 28px); color:#EFE2D6;}
+
+  .theme-swatch{ width:44px; height:32px; border-radius:3px; border:2px solid transparent; cursor:pointer; flex:0 0 auto;}
+  .theme-swatch.sel{ border-color: var(--maroon); }
+  .font-opt{ padding:6px 10px; border:1px solid var(--line); border-radius:var(--radius); cursor:pointer; background:#FBF7ED; font-size:13px; }
+  .font-opt.sel{ border-color:var(--maroon); background:#F1DCDA; }
+  .marker-swatch{ width:22px; height:22px; border-radius:50%; cursor:pointer; border:2px solid #fff; box-shadow:0 0 0 1px var(--line);}
+
+  .nick-colored{font-weight:700;}
+
+  .toast{
+    position:fixed; bottom:16px; left:50%; transform:translateX(-50%);
+    background: var(--ink); color:#fff; padding:9px 16px; border-radius:var(--radius);
+    font-size:13px; z-index:100; box-shadow: var(--shadow);
+  }
+
+  .coin{color:#8A6A2A; font-weight:700;}
+  .hidden{display:none !important;}
+  .flex-between{display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;}
+  .small-muted{font-size:11px; color:var(--ink-soft);}
+
+  @media (max-width:480px){
+    .panel{margin:10px 6px; padding:12px;}
+    .brand{font-size:17px;}
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.3.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.3.0/firebase-firestore-compat.min.js"></script>
+<!-- ТИМЧАСОВО для діагностики на телефоні: маленька кнопка внизу екрана відкриває консоль
+     прямо на сторінці. Після того як все запрацює — можна прибрати цей рядок. -->
+<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+<script>eruda.init();</script>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ============================================================
+   КОНФІГУРАЦІЯ
+   ============================================================ */
+// Щоб ВИМКНУТИ авторизацію (для розробки/тестування) — постав false.
+// Якщо false — сайт одразу відкриється під обліковим записом DEV_AUTOLOGIN_USER.
+const AUTH_ENABLED = true;
+const DEV_AUTOLOGIN_USER = "tonipok";
+
+const STORAGE_KEY = "school-db-v1";
+const GRADE_MIN = 1, GRADE_MAX = 12;
+const DAYS = ["Понеділок","Вівторок","Середа","Четвер","П'ятниця","Субота"];
+
+const NB_THEMES = [
+  {id:"cream", name:"Кремовий папір", cls:"nb-theme-cream"},
+  {id:"grid", name:"Клітинка", cls:"nb-theme-grid"},
+  {id:"dark", name:"Дошка", cls:"nb-theme-dark"},
+  {id:"kraft", name:"Крафт", cls:"nb-theme-kraft"},
+  {id:"pink", name:"Рожевий", cls:"nb-theme-pink"},
+  {id:"mint", name:"М'ятний", cls:"nb-theme-mint"},
+  {id:"sticky", name:"Стікер", cls:"nb-theme-sticky"},
+  {id:"vintage", name:"Вінтаж", cls:"nb-theme-vintage"},
+  {id:"blueprint", name:"Креслення", cls:"nb-theme-blueprint"},
+  {id:"redline", name:"Зошит у лінію", cls:"nb-theme-redline"},
+  {id:"night", name:"Нічне небо", cls:"nb-theme-night"},
+  {id:"choco", name:"Шоколад", cls:"nb-theme-choco"}
+];
+const NB_FONTS = [
+  {id:"sans", name:"Звичайний", css:"-apple-system,'Segoe UI',Roboto,Arial,sans-serif"},
+  {id:"serif", name:"Друкований", css:"Georgia,'Times New Roman',serif"},
+  {id:"mono", name:"Машинописний", css:"'Courier New',monospace"},
+  {id:"hand1", name:"Рукописний", css:"'Comic Sans MS','Comic Sans',cursive"},
+  {id:"hand2", name:"Каліграфія", css:"'Brush Script MT',cursive"},
+  {id:"deco", name:"Декоративний", css:"Papyrus,fantasy"},
+  {id:"treb", name:"Класичний sans", css:"'Trebuchet MS',sans-serif"},
+  {id:"pala", name:"Палатіно", css:"'Palatino Linotype','Book Antiqua',Palatino,serif"}
+];
+const MARKER_COLORS = ["#FFF176","#A5D6A7","#90CAF9","#F48FB1","#FFCC80"];
+const NICK_COLORS = ["#7A2E2E","#2F4F3D","#3B5B72","#AB824A","#8E44AD","#C0392B","#16A085"];
+
+/* ============================================================
+   ВЛАСНІ ІКОНКИ (замість стандартних емодзі) — прості лінійні SVG,
+   колір іде через currentColor, тому підхоплюють колір тексту.
+   ============================================================ */
+const ICONS = {
+  book:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>`,
+  calendar:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></svg>`,
+  users:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  tag:       `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.83 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8Z"/><circle cx="7" cy="7" r="1.2" fill="currentColor" stroke="none"/></svg>`,
+  pencil:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>`,
+  clipboard: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>`,
+  megaphone: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4a1 1 0 0 0 1 1h2l7 4V5l-7 4H4a1 1 0 0 0-1 1Z"/><path d="M18 8a5 5 0 0 1 0 8"/></svg>`,
+  search:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`,
+  coin:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v9"/><path d="M9.7 9.3c0-1 1-1.7 2.3-1.7s2.3.6 2.3 1.5c0 1-.9 1.3-2.3 1.7s-2.3.8-2.3 1.8c0 1 1 1.6 2.3 1.6s2.3-.6 2.3-1.6"/></svg>`,
+  note:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>`,
+  chat:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8A8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5Z"/></svg>`,
+  thumb:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"/></svg>`,
+  warn:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.7 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/></svg>`,
+  pin:       `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>`,
+  close:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>`
+};
+function icon(name, size){
+  size = size || 15;
+  const svg = ICONS[name] || "";
+  return svg.replace("<svg ", `<svg width="${size}" height="${size}" style="vertical-align:-3px; flex-shrink:0;" `);
+}
+
+/* ============================================================
+   ЗНАЧКИ-АВАТАРКИ (власний набір замість емодзі) — кольорове коло
+   з простим геометричним символом. avatarId зберігається у користувача/класу.
+   ============================================================ */
+const BADGES = [
+  {id:"crown",   name:"Корона",    color:"#7A2E2E", glyph:`<path d="M5 19V12L9 15L12 8L15 15L19 12V19Z"/><rect x="5" y="18.6" width="14" height="1.8" rx="0.5"/>`},
+  {id:"star",    name:"Зірка",     color:"#AB824A", glyph:`<path d="M12 2.5l2.9 6.2 6.6.8-4.9 4.6 1.3 6.7L12 17.5l-5.9 3.3 1.3-6.7-4.9-4.6 6.6-.8Z"/>`},
+  {id:"bolt",    name:"Блискавка", color:"#3B5B72", glyph:`<path d="M13 2 4 14h8l-1 8 9-12h-8Z"/>`},
+  {id:"leaf",    name:"Листок",    color:"#2F4F3D", glyph:`<path d="M4.5 20c0-9.5 6-15.5 15.5-16.5-1 9.7-7.3 15.5-15.5 16.5Z" fill="none" stroke="#F1E8D8" stroke-width="1.6"/><path d="M7 17c3-4 7-8 11.5-11.5" fill="none" stroke="#F1E8D8" stroke-width="1.6" stroke-linecap="round"/>`},
+  {id:"wave",    name:"Хвиля",     color:"#557790", glyph:`<path d="M2 9c2-3.3 4-3.3 6 0s4 3.3 6 0 4-3.3 6 0 4 3.3 6 0" fill="none" stroke="#F1E8D8" stroke-width="2" stroke-linecap="round"/><path d="M2 15c2-3.3 4-3.3 6 0s4 3.3 6 0 4-3.3 6 0 4 3.3 6 0" fill="none" stroke="#F1E8D8" stroke-width="2" stroke-linecap="round"/>`},
+  {id:"spark",   name:"Іскра",     color:"#8A6A2A", glyph:`<path d="M12 2.5l2 6.5 6.5 2-6.5 2-2 6.5-2-6.5-6.5-2 6.5-2Z"/>`},
+  {id:"moon",    name:"Місяць",    color:"#39456B", glyph:`<path d="M21 13.3A9 9 0 1 1 11.2 3a7.2 7.2 0 0 0 9.8 10.3Z"/>`},
+  {id:"sun",     name:"Сонце",     color:"#C98A3D", glyph:`<circle cx="12" cy="12" r="4.6" fill="none" stroke="#F1E8D8" stroke-width="1.8"/><g stroke="#F1E8D8" stroke-width="1.8" stroke-linecap="round"><path d="M12 2.5v2.6M12 18.9v2.6M3.8 12h2.6M17.6 12h2.6M6 6l1.8 1.8M16.2 16.2 18 18M18 6l-1.8 1.8M7.8 16.2 6 18"/></g>`},
+  {id:"diamond", name:"Діамант",   color:"#3D6B4A", glyph:`<path d="M12 3 21 12 12 21 3 12Z" fill="none" stroke="#F1E8D8" stroke-width="1.8"/>`},
+  {id:"drop",    name:"Крапля",    color:"#3B5B72", glyph:`<path d="M12 3c3.2 5 6.5 8.6 6.5 11.9A6.5 6.5 0 0 1 5.5 14.9C5.5 11.6 8.8 8 12 3Z" fill="none" stroke="#F1E8D8" stroke-width="1.8"/>`},
+  {id:"ring",    name:"Кільце",    color:"#5A2436", glyph:`<circle cx="12" cy="12" r="7" fill="none" stroke="#F1E8D8" stroke-width="2.4"/>`},
+  {id:"arrow",   name:"Стріла",    color:"#6B4A8A", glyph:`<path d="M12 20V4M5 11l7-7 7 7" fill="none" stroke="#F1E8D8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`}
+];
+function badgeById(id){ return BADGES.find(b=>b.id===id) || BADGES[1]; }
+function avatarBadge(avatarId, size){
+  size = size || 30;
+  const b = badgeById(avatarId);
+  return `<span style="display:inline-flex; align-items:center; justify-content:center; width:${size}px; height:${size}px; border-radius:50%; background:${b.color}; flex-shrink:0;">
+    <svg width="${Math.round(size*0.58)}" height="${Math.round(size*0.58)}" viewBox="0 0 24 24" fill="#F1E8D8" stroke="#F1E8D8" stroke-width="0">${b.glyph}</svg>
+  </span>`;
+}
+function avatarPickerHtml(pickerId, hiddenInputId, current){
+  return `<div id="${pickerId}" class="row" style="gap:6px; flex-wrap:wrap;">
+    ${BADGES.map(b=>`<span class="avatar-opt ${b.id===current?'sel':''}" title="${b.name}" onclick="pickAvatarInline('${pickerId}','${hiddenInputId}','${b.id}', this)" style="cursor:pointer; border-radius:50%; padding:2px; border:2px solid ${b.id===current?'var(--maroon)':'transparent'};">${avatarBadge(b.id,30)}</span>`).join("")}
+    <input type="hidden" id="${hiddenInputId}" value="${current}">
+  </div>`;
+}
+function pickAvatarInline(pickerId, hiddenInputId, avatarId, el){
+  document.getElementById(hiddenInputId).value = avatarId;
+  const wrap = document.getElementById(pickerId);
+  wrap.querySelectorAll(".avatar-opt").forEach(s=>{ s.classList.remove("sel"); s.style.borderColor="transparent"; });
+  el.classList.add("sel"); el.style.borderColor="var(--maroon)";
+}
+
+
+/* ============================================================
+   СХОВИЩЕ ДАНИХ — Firebase Firestore.
+   GitHub Pages віддає лише статичні файли, тому вся спільна база
+   (користувачі/оцінки/чат тощо) лежить у твоєму Firebase-проєкті.
+
+   НАЛАШТУВАННЯ (зроби один раз):
+   1. Зайди на https://console.firebase.google.com → Add project (безкоштовно).
+   2. У проєкті: Build → Firestore Database → Create database → почни в
+      Test mode (або встанови правила нижче) → обери будь-який регіон.
+   3. Project settings (шестерня зверху зліва) → General → внизу "Your apps"
+      → натисни іконку "</>" (Web) → зареєструй застосунок → скопіюй
+      об'єкт firebaseConfig, який тобі покажуть, і встав його ЗАМІСТЬ
+      прикладу нижче (FIREBASE_CONFIG).
+   4. Firestore Database → Rules → встав це і Publish:
+        rules_version = '2';
+        service cloud.firestore {
+          match /databases/{database}/documents {
+            match /{document=**} { allow read, write: if true; }
+          }
+        }
+      (Це відкриті правила — підходить для шкільного прототипу з власним
+      логіном на сайті, як зараз. Для продакшену варто зробити суворіші
+      правила з Firebase Authentication.)
+   apiKey тут — це НЕ секрет, Firebase-конфіг завжди публічний на клієнті,
+   тож його можна спокійно тримати у публічному GitHub-репозиторії.
+   ============================================================ */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCXjMpyMgARP1uN4zPijSUk7RTHeWNvm8w",
+  authDomain: "school-ada94.firebaseapp.com",
+  projectId: "school-ada94",
+  storageBucket: "school-ada94.firebasestorage.app",
+  messagingSenderId: "1026727259138",
+  appId: "1:1026727259138:web:575ec93f743bcfc754cb1b"
+};
+if (typeof firebase === "undefined") {
+  document.getElementById("app").innerHTML =
+    '<div style="max-width:420px;margin:60px auto;padding:20px;font-family:sans-serif;' +
+    'background:#F1E8D8;border:1px solid #C9BC9F;border-radius:4px;color:#7A2E2E;">' +
+    '<b>Не вдалося завантажити Firebase.</b><br><br>' +
+    'Перевір інтернет-з\u2019єднання, вимкни блокувальник реклами/VPN на цьому сайті ' +
+    'і онови сторінку. Якщо не допоможе — напиши в консолі браузера (F12), яка саме помилка.' +
+    '</div>';
+  throw new Error("Firebase SDK не завантажився (скрипт з CDN заблоковано або немає інтернету).");
+}
+firebase.initializeApp(FIREBASE_CONFIG);
+const fsdb = firebase.firestore();
+// Деякі мобільні мережі/проксі рвуть стандартне WebChannel-з'єднання Firestore.
+// Це офіційний обхід — авто-перемикання на long-polling, коли звичайне з'єднання не проходить.
+fsdb.settings({ experimentalAutoDetectLongPolling: true, merge: true });
+
+function defaultDB(){
+  return {
+    users: {
+      tonipok: { username:"tonipok", password:"Crystmas1@", role:"admin", name:"Адміністратор",
+        avatarId:"crown", nickColor:null, badge:null, coins:0, behavior:100, blocked:false, classId:null, children:[] }
+    },
+    classes: {},
+    classRequests: [],
+    schedule: {},
+    homework: {},
+    grades: {},
+    behavior: {},
+    notebooks: {},
+    announcements: [],
+    economy: {
+      enabled: true,
+      shop: [
+        {id:"nickcolor", name:"Колір нікнейма", desc:"Обери інший колір свого імені в чаті та скрізь на сайті.", price:50, type:"nickcolor"},
+        {id:"gradeboost", name:"+1 до оцінки", desc:"Піднімає одну з твоїх оцінок на 1 бал (максимум 12).", price:150, type:"gradeboost"},
+        {id:"statusbadge", name:"Значок-стикер", desc:"Маленький значок поруч з іменем у чаті.", price:30, type:"statusbadge"}
+      ]
+    }
+  };
+}
+
+async function dbLoad(){
+  try{
+    const snap = await fsdb.collection("app").doc(STORAGE_KEY).get();
+    if(snap.exists) return snap.data();
+  }catch(e){ console.error("Firestore load error:", e); showToast("Немає з'єднання з базою — перевір firebaseConfig"); }
+  const fresh = defaultDB();
+  await dbSave(fresh);
+  return fresh;
+}
+async function dbSave(db){
+  try{
+    await fsdb.collection("app").doc(STORAGE_KEY).set(db);
+  }catch(e){ console.error("Firestore save error:", e); showToast("Помилка збереження даних"); }
+}
+// Завжди мутуємо СВІЖУ копію бази, щоб мінімізувати втрату паралельних змін.
+async function dbMutate(mutatorFn){
+  const fresh = await dbLoad();
+  const result = mutatorFn(fresh);
+  await dbSave(fresh);
+  state.db = fresh;
+  return result;
+}
+
+async function chatLoad(classId){
+  try{
+    const snap = await fsdb.collection("chats").doc(classId).get();
+    if(snap.exists) return snap.data().messages || [];
+  }catch(e){ console.error("Firestore chat load error:", e); }
+  return [];
+}
+async function chatAppend(classId, msg){
+  try{
+    await fsdb.collection("chats").doc(classId).set(
+      { messages: firebase.firestore.FieldValue.arrayUnion(msg) },
+      { merge: true }
+    );
+  }catch(e){ console.error("Firestore chat save error:", e); }
+  return chatLoad(classId);
+}
+
+/* ============================================================
+   ЗАГАЛЬНИЙ СТАН (тримаємо в пам'яті — жодного localStorage/sessionStorage)
+   ============================================================ */
+const state = {
+  db: null,
+  currentUser: null,   // username залогіненого користувача
+  tab: null,
+  loginError: "",
+  activeClassId: null, // обрана батьком/адміном/вчителем дитина/клас у деяких вкладках
+  activeChild: null,   // обраний батьком учень
+  chatMessages: [],
+  chatPoll: null,
+  nbEditingId: null,
+  nbDraftTitle: "",
+  nbDraftText: "",
+  nbTheme: "cream",
+  nbFont: "sans",
+  shopColorPick: null,
+  shopBadgePick: null
+};
+
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function todayStr(){ const d=new Date(); return d.toLocaleDateString("uk-UA"); }
+function escapeHtml(s){
+  return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+// Легке очищення HTML нотатника перед показом (для адмінського перегляду) — прибирає script/onXXX.
+function sanitizeNb(html){
+  const div = document.createElement("div");
+  div.innerHTML = String(html||"");
+  div.querySelectorAll("script").forEach(n=>n.remove());
+  div.querySelectorAll("*").forEach(n=>{
+    [...n.attributes].forEach(a=>{ if(/^on/i.test(a.name)) n.removeAttribute(a.name); });
+  });
+  return div.innerHTML;
+}
+function showToast(text){
+  const old = document.querySelector(".toast");
+  if(old) old.remove();
+  const t = document.createElement("div");
+  t.className="toast"; t.textContent=text;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 2400);
+}
+function gradeClass(g){
+  g = Number(g);
+  if(g <= 4) return "g-low";
+  if(g <= 8) return "g-mid";
+  return "g-high";
+}
+function userLabel(u){
+  if(!u) return "?";
+  return u.name || u.username;
+}
+function nickSpan(u){
+  if(!u) return "";
+  const color = u.nickColor ? `style="color:${u.nickColor}"` : "";
+  const badge = u.badge ? avatarBadge(u.badge, 15)+" " : "";
+  return `<span class="nick-colored" ${color}>${badge}${escapeHtml(userLabel(u))}</span>`;
+}
+function roleName(r){
+  return {admin:"Адміністратор", teacher:"Вчитель", student:"Учень", parent:"Батько/мати"}[r] || r;
+}
+function classById(id){ return state.db.classes[id]; }
+function classgolabel(cls){ return cls ? (cls.name||"Клас") : "—"; }
+function studentsOfClass(id){
+  const cls = classById(id); if(!cls) return [];
+  return cls.students.map(un=>state.db.users[un]).filter(Boolean);
+}
+function teacherClasses(username){
+  return Object.values(state.db.classes).filter(c=>c.teacher===username);
+}
+function parentChildren(u){
+  return (u.children||[]).map(un=>state.db.users[un]).filter(Boolean);
+}
+function ensureArr(obj, key){ if(!obj[key]) obj[key]=[]; return obj[key]; }
+
+function render(){
+  const app = document.getElementById("app");
+  if(!state.db){
+    app.innerHTML = `<div class="login-wrap"><div class="login-card"><h1>Щоденник</h1><p class="subtle">Завантаження…</p></div></div>`;
+    return;
+  }
+  if(!AUTH_ENABLED && !state.currentUser && state.db.users[DEV_AUTOLOGIN_USER]){
+    state.currentUser = DEV_AUTOLOGIN_USER;
+  }
+  if(!state.currentUser){
+    app.innerHTML = renderLogin();
+    attachLoginHandlers();
+    return;
+  }
+  const u = state.db.users[state.currentUser];
+  if(!u || u.blocked){
+    state.currentUser = null;
+    app.innerHTML = renderLogin();
+    attachLoginHandlers();
+    return;
+  }
+  if(!state.tab) state.tab = defaultTabFor(u.role);
+  app.innerHTML = renderShell(u);
+  attachShellHandlers(u);
+}
+
+function defaultTabFor(role){
+  return {admin:"schedule", teacher:"classes", student:"schedule", parent:"grades"}[role];
+}
+
+/* ============================================================
+   ЕКРАН ВХОДУ
+   ============================================================ */
+function renderLogin(){
+  return `
+  <div class="login-wrap">
+    <div class="login-card">
+      <h1>${icon("book",22)} Щоденник</h1>
+      <p class="subtle">Шкільна платформа — увійдіть у свій обліковий запис.</p>
+      <label>Логін</label>
+      <input type="text" id="li-user" autocomplete="username">
+      <label>Пароль</label>
+      <input type="password" id="li-pass" autocomplete="current-password">
+      <button class="btn btn-primary" id="li-btn" style="width:100%">Увійти</button>
+      <div class="login-err" id="li-err"></div>
+    </div>
+  </div>`;
+}
+function attachLoginHandlers(){
+  const doLogin = async ()=>{
+    const user = document.getElementById("li-user").value.trim();
+    const pass = document.getElementById("li-pass").value;
+    const err = document.getElementById("li-err");
+    err.textContent = "";
+    if(!user || !pass){ err.textContent="Заповніть логін і пароль."; return; }
+    const fresh = await dbLoad();
+    state.db = fresh;
+    const u = fresh.users[user];
+    if(!u || u.password !== pass){ err.textContent="Невірний логін або пароль."; return; }
+    if(u.blocked){ err.textContent="Обліковий запис заблоковано."; return; }
+    state.currentUser = user;
+    state.tab = defaultTabFor(u.role);
+    render();
+  };
+  document.getElementById("li-btn").onclick = doLogin;
+  document.getElementById("li-pass").addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
+}
+
+/* ============================================================
+   КАРКАС ІНТЕРФЕЙСУ (шапка + вкладки + вміст)
+   ============================================================ */
+const TABS_BY_ROLE = {
+  admin: [
+    ["schedule",icon("calendar")+" Розклад"], ["users",icon("users")+" Користувачі"], ["classes",icon("tag")+" Класи"],
+    ["grades",icon("pencil")+" Оцінки"], ["behavior",icon("clipboard")+" Поведінка"], ["announcements",icon("megaphone")+" Оголошення"],
+    ["notebook",icon("book")+" Зошит"], ["notebooks-admin",icon("search")+" Зошити учнів"], ["economy",icon("coin")+" Коіни"]
+  ],
+  teacher: [
+    ["classes",icon("tag")+" Мої класи"], ["grades",icon("pencil")+" Оцінки"], ["homework",icon("note")+" Д/З"],
+    ["behavior",icon("clipboard")+" Зауваження"], ["chat",icon("chat")+" Чат"], ["notebook",icon("book")+" Зошит"], ["announcements",icon("megaphone")+" Оголошення"]
+  ],
+  student: [
+    ["schedule",icon("calendar")+" Розклад"], ["homework",icon("note")+" Д/З"], ["grades",icon("pencil")+" Оцінки"],
+    ["behavior",icon("clipboard")+" Поведінка"], ["chat",icon("chat")+" Чат класу"], ["notebook",icon("book")+" Зошит"],
+    ["announcements",icon("megaphone")+" Оголошення"], ["shop",icon("coin")+" Коіни"]
+  ],
+  parent: [
+    ["grades",icon("pencil")+" Оцінки дитини"], ["behavior",icon("clipboard")+" Поведінка"], ["homework",icon("note")+" Д/З"],
+    ["schedule",icon("calendar")+" Розклад"], ["chat",icon("chat")+" Чат класу"], ["announcements",icon("megaphone")+" Оголошення"]
+  ]
+};
+
+function renderShell(u){
+  const tabs = TABS_BY_ROLE[u.role];
+  const tabsHtml = tabs.map(([id,label])=>
+    `<button class="tab ${state.tab===id?'active':''}" data-tab="${id}">${label}</button>`
+  ).join("");
+  return `
+  <div class="topbar">
+    <div class="topbar-row">
+      <div class="brand"><span class="mark">${icon("book",15)}</span> Щоденник</div>
+      <div class="who">
+        <div class="av">${avatarBadge(u.avatarId, 30)}</div>
+        <div>
+          <div class="nm">${nickSpan(u)}</div>
+          <div style="font-size:11px; opacity:0.85;">${roleName(u.role)}</div>
+        </div>
+        <button class="btn-ghost-topbar" id="logout-btn">Вийти</button>
+      </div>
+    </div>
+    <div class="tabrail">${tabsHtml}</div>
+  </div>
+  <div id="tab-content">${renderTabContent(u)}</div>
+  `;
+}
+
+function attachShellHandlers(u){
+  document.getElementById("logout-btn").onclick = ()=>{
+    stopChatPoll();
+    state.currentUser = null; state.tab = null;
+    render();
+  };
+  document.querySelectorAll(".tab").forEach(btn=>{
+    btn.onclick = ()=>{
+      stopChatPoll();
+      state.tab = btn.dataset.tab;
+      render();
+    };
+  });
+  wireTabContent(u);
+}
+
+function renderTabContent(u){
+  switch(u.role){
+    case "admin": return renderAdminTab(u);
+    case "teacher": return renderTeacherTab(u);
+    case "student": return renderStudentTab(u);
+    case "parent": return renderParentTab(u);
+  }
+  return "";
+}
+function wireTabContent(u){
+  switch(u.role){
+    case "admin": return wireAdminTab(u);
+    case "teacher": return wireTeacherTab(u);
+    case "student": return wireStudentTab(u);
+    case "parent": return wireParentTab(u);
+  }
+}
+function afterRenderRefresh(){ render(); }
+
+/* ============================================================
+   АДМІН
+   ============================================================ */
+function renderAdminTab(u){
+  switch(state.tab){
+    case "schedule": return adminSchedule();
+    case "users": return adminUsers();
+    case "classes": return adminClasses();
+    case "grades": return adminGrades();
+    case "behavior": return adminBehavior();
+    case "announcements": return renderAnnouncements(u, true);
+    case "notebook": return renderNotebookTab(u);
+    case "notebooks-admin": return adminNotebooks();
+    case "economy": return adminEconomy();
+  }
+  return "";
+}
+function wireAdminTab(u){ wireNotebookTab(u); }
+
+function approvedClasses(){ return Object.values(state.db.classes).filter(c=>c.approved); }
+
+function adminSchedule(){
+  const classes = approvedClasses();
+  if(!classes.length) return `<div class="panel"><h2>${icon("calendar")} Розклад</h2><div class="empty-note">Ще немає жодного схваленого класу. Спочатку затвердіть клас у вкладці «Класи».</div></div>`;
+  const sel = state.adminScheduleClass && state.db.classes[state.adminScheduleClass] ? state.adminScheduleClass : classes[0].id;
+  state.adminScheduleClass = sel;
+  const cls = state.db.classes[sel];
+  const sched = state.db.schedule[sel] || {};
+  const daysHtml = DAYS.map(day=>{
+    const lessons = sched[day]||[];
+    const rows = lessons.map((l,i)=>`
+      <tr>
+        <td>${escapeHtml(l.time)}</td><td>${escapeHtml(l.subject)}</td><td>${escapeHtml(l.teacher||"")}</td>
+        <td><button class="btn btn-outline btn-sm" onclick="adminRemoveLesson('${sel}','${escapeAttr(day)}',${i})">${icon("close",13)}</button></td>
+      </tr>`).join("");
+    return `
+    <h3>${day}</h3>
+    <table><thead><tr><th>Час</th><th>Предмет</th><th>Вчитель</th><th></th></tr></thead><tbody>
+      ${rows || '<tr><td colspan="4" class="subtle">Уроків не додано</td></tr>'}
+    </tbody></table>
+    <div class="row" style="margin-top:6px;">
+      <input type="text" placeholder="Час (напр. 08:30)" id="sc-time-${dayKey(day)}">
+      <input type="text" placeholder="Предмет" id="sc-subj-${dayKey(day)}">
+      <input type="text" placeholder="Вчитель" id="sc-teach-${dayKey(day)}">
+      <button class="btn btn-secondary btn-sm" style="margin-top:0" onclick="adminAddLesson('${sel}','${escapeAttr(day)}')">${icon("calendar",13)} Додати</button>
+    </div>`;
+  }).join("<hr style='border:none;border-top:1px solid var(--line);margin:14px 0;'>");
+
+  return `<div class="panel">
+    <h2>${icon("calendar")} Розклад</h2>
+    <label>Клас</label>
+    <select onchange="state.adminScheduleClass=this.value; render();">
+      ${classes.map(c=>`<option value="${c.id}" ${c.id===sel?"selected":""}>${escapeHtml(c.name)}</option>`).join("")}
+    </select>
+    ${daysHtml}
+  </div>`;
+}
+function dayKey(d){ return d.replace(/[^a-zA-Zа-яА-ЯіїєІЇЄ]/g,""); }
+function escapeAttr(s){ return String(s).replace(/'/g,"\\'"); }
+async function adminAddLesson(classId, day){
+  const time = document.getElementById("sc-time-"+dayKey(day)).value.trim();
+  const subj = document.getElementById("sc-subj-"+dayKey(day)).value.trim();
+  const teach = document.getElementById("sc-teach-"+dayKey(day)).value.trim();
+  if(!time || !subj){ showToast("Вкажіть час і предмет"); return; }
+  await dbMutate(db=>{
+    if(!db.schedule[classId]) db.schedule[classId]={};
+    ensureArr(db.schedule[classId], day).push({time,subject:subj,teacher:teach});
+  });
+  showToast("Урок додано"); render();
+}
+async function adminRemoveLesson(classId, day, idx){
+  await dbMutate(db=>{ db.schedule[classId][day].splice(idx,1); });
+  render();
+}
+
+function adminUsers(){
+  const users = Object.values(state.db.users);
+  const rows = users.map(us=>`
+    <div class="card">
+      <div class="card-title">
+        <span>${avatarBadge(us.avatarId, 26)} ${escapeHtml(us.name)} <span class="small-muted">(@${escapeHtml(us.username)})</span></span>
+        <span class="pill ${us.blocked?'pill-bad':'pill-ok'}">${roleName(us.role)}${us.blocked?" · заблок.":""}</span>
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <div>
+          <label>Новий пароль</label>
+          <input type="text" id="pw-${us.username}" placeholder="залишити пустим — без змін">
+        </div>
+        <div>
+          <label>Аватар</label>
+          ${avatarPickerHtml("avpick-"+us.username, "av-"+us.username, us.avatarId)}
+        </div>
+      </div>
+      ${us.role==="student" ? `
+      <label>Клас</label>
+      <select id="cls-${us.username}">
+        <option value="">— без класу —</option>
+        ${approvedClasses().map(c=>`<option value="${c.id}" ${us.classId===c.id?"selected":""}>${escapeHtml(c.name)}</option>`).join("")}
+      </select>` : ""}
+      ${us.role==="parent" ? `
+      <label>Діти (учні)</label>
+      <div style="display:flex; flex-wrap:wrap; gap:6px;">
+        ${Object.values(state.db.users).filter(x=>x.role==="student").map(s=>`
+          <label style="display:flex; align-items:center; gap:4px; font-weight:400; border:1px solid var(--line); padding:4px 8px; border-radius:12px;">
+            <input type="checkbox" id="ch-${us.username}-${s.username}" ${(us.children||[]).includes(s.username)?"checked":""}>
+            ${escapeHtml(s.name)}
+          </label>`).join("") || '<span class="subtle">Немає учнів у системі</span>'}
+      </div>` : ""}
+      <div class="row" style="margin-top:10px;">
+        <button class="btn btn-primary btn-sm" style="margin-top:0" onclick="adminSaveUser('${us.username}')">Зберегти</button>
+        <button class="btn btn-outline btn-sm" style="margin-top:0" onclick="adminToggleBlock('${us.username}')">${us.blocked?"Розблокувати":"Заблокувати"}</button>
+        ${us.username!=="tonipok" ? `<button class="btn btn-danger btn-sm" style="margin-top:0" onclick="adminDeleteUser('${us.username}')">Видалити</button>`:""}
+      </div>
+    </div>
+  `).join("");
+
+  return `<div class="panel">
+    <h2>${icon("users")} Користувачі</h2>
+    ${rows}
+    <h3>Створити користувача</h3>
+    <div class="row">
+      <div><label>Логін</label><input type="text" id="nu-login" placeholder="лат. літери/цифри"></div>
+      <div><label>Пароль</label><input type="text" id="nu-pass"></div>
+    </div>
+    <div class="row">
+      <div><label>Ім'я</label><input type="text" id="nu-name"></div>
+      <div><label>Роль</label>
+        <select id="nu-role">
+          <option value="student">Учень</option>
+          <option value="parent">Батько/мати</option>
+          <option value="teacher">Вчитель</option>
+          <option value="admin">Адміністратор</option>
+        </select>
+      </div>
+    </div>
+    <label>Аватар</label>${avatarPickerHtml("nu-av-picker","nu-avatarid","star")}
+    <button class="btn btn-primary" onclick="adminCreateUser()">Створити</button>
+  </div>`;
+}
+function validUsername(s){ return /^[A-Za-z0-9_\-]{3,24}$/.test(s); }
+async function adminCreateUser(){
+  const login = document.getElementById("nu-login").value.trim();
+  const pass = document.getElementById("nu-pass").value;
+  const name = document.getElementById("nu-name").value.trim() || login;
+  const role = document.getElementById("nu-role").value;
+  const avatarId = document.getElementById("nu-avatarid").value || "star";
+  if(!validUsername(login)){ showToast("Логін: лише латиниця/цифри/_ , 3-24 символи"); return; }
+  if(!pass){ showToast("Вкажіть пароль"); return; }
+  let ok = true;
+  await dbMutate(db=>{
+    if(db.users[login]){ ok=false; return; }
+    db.users[login] = {username:login, password:pass, role, name, avatarId, nickColor:null, badge:null, coins:0, behavior:100, blocked:false, classId:null, children:[]};
+  });
+  if(!ok){ showToast("Такий логін уже існує"); return; }
+  showToast("Користувача створено"); render();
+}
+async function adminSaveUser(username){
+  const pw = document.getElementById("pw-"+username).value;
+  const av = document.getElementById("av-"+username).value;
+  const clsEl = document.getElementById("cls-"+username);
+  await dbMutate(db=>{
+    const us = db.users[username]; if(!us) return;
+    if(pw) us.password = pw;
+    if(av) us.avatarId = av;
+    if(clsEl){
+      const newCls = clsEl.value || null;
+      if(us.classId && db.classes[us.classId]){
+        db.classes[us.classId].students = db.classes[us.classId].students.filter(x=>x!==username);
+      }
+      us.classId = newCls;
+      if(newCls && db.classes[newCls] && !db.classes[newCls].students.includes(username)){
+        db.classes[newCls].students.push(username);
+      }
+    }
+    if(us.role==="parent"){
+      const kids = Object.values(db.users).filter(x=>x.role==="student").map(s=>s.username);
+      us.children = kids.filter(k=>{
+        const box = document.getElementById(`ch-${username}-${k}`);
+        return box && box.checked;
+      });
+    }
+  });
+  showToast("Збережено"); render();
+}
+async function adminToggleBlock(username){
+  await dbMutate(db=>{ db.users[username].blocked = !db.users[username].blocked; });
+  render();
+}
+function adminDeleteUser(username){
+  askConfirm("Видалити користувача "+username+"?", async ()=>{
+    await dbMutate(db=>{
+      delete db.users[username];
+      Object.values(db.classes).forEach(c=>{ c.students = c.students.filter(s=>s!==username); });
+    });
+    render();
+  });
+}
+
+function adminClasses(){
+  const pending = state.db.classRequests.filter(r=>r.status==="pending");
+  const pendingHtml = pending.map(r=>`
+    <div class="card">
+      <div class="card-title"><span>${icon("tag")} ${escapeHtml(r.name)}</span><span class="pill pill-wait">очікує</span></div>
+      <div class="small-muted">Вчитель: ${escapeHtml(state.db.users[r.teacher]?.name || r.teacher)}</div>
+      <div class="row" style="margin-top:8px;">
+        <button class="btn btn-secondary btn-sm" style="margin-top:0" onclick="adminApproveClass('${r.id}')">Схвалити</button>
+        <button class="btn btn-danger btn-sm" style="margin-top:0" onclick="adminRejectClass('${r.id}')">Відхилити</button>
+      </div>
+    </div>`).join("") || `<div class="empty-note">Немає запитів на розгляді.</div>`;
+
+  const classes = approvedClasses().map(c=>`
+    <div class="card">
+      <div class="card-title"><span>${avatarBadge(c.avatarId||"diamond",22)} ${escapeHtml(c.name)}</span><span class="pill pill-ok">схвалено</span></div>
+      <div class="small-muted">Вчитель: ${escapeHtml(state.db.users[c.teacher]?.name || c.teacher)} · Учнів: ${c.students.length} · Чат: «${escapeHtml(c.chatName||c.name)}»</div>
+      <button class="btn btn-danger btn-sm" onclick="adminDeleteClass('${c.id}')">Видалити клас</button>
+    </div>`).join("") || `<div class="empty-note">Ще немає схвалених класів.</div>`;
+
+  return `<div class="panel">
+    <h2>${icon("tag")} Класи</h2>
+    <h3>Запити на створення</h3>
+    ${pendingHtml}
+    <h3>Схвалені класи</h3>
+    ${classes}
+  </div>`;
+}
+async function adminApproveClass(reqId){
+  await dbMutate(db=>{
+    const req = db.classRequests.find(r=>r.id===reqId); if(!req) return;
+    req.status="approved";
+    db.classes[req.id] = {id:req.id, name:req.name, teacher:req.teacher, approved:true, avatarId:"diamond", chatName:req.name, students:[]};
+  });
+  showToast("Клас схвалено"); render();
+}
+async function adminRejectClass(reqId){
+  await dbMutate(db=>{ const req = db.classRequests.find(r=>r.id===reqId); if(req) req.status="rejected"; });
+  render();
+}
+function adminDeleteClass(classId){
+  askConfirm("Видалити клас?", async ()=>{
+    await dbMutate(db=>{
+      delete db.classes[classId];
+      Object.values(db.users).forEach(u=>{ if(u.classId===classId) u.classId=null; });
+    });
+    render();
+  });
+}
+
+function studentSelectOptions(sel){
+  return Object.values(state.db.users).filter(u=>u.role==="student").map(s=>
+    `<option value="${s.username}" ${s.username===sel?"selected":""}>${escapeHtml(s.name)}</option>`).join("");
+}
+function adminGrades(){
+  const students = Object.values(state.db.users).filter(u=>u.role==="student");
+  if(!students.length) return `<div class="panel"><h2>${icon("pencil")} Оцінки</h2><div class="empty-note">Немає жодного учня.</div></div>`;
+  const sel = state.adminGradeStudent && state.db.users[state.adminGradeStudent] ? state.adminGradeStudent : students[0].username;
+  state.adminGradeStudent = sel;
+  return `<div class="panel">
+    <h2>${icon("pencil")} Оцінки</h2>
+    <label>Учень</label>
+    <select onchange="state.adminGradeStudent=this.value; render();">${studentSelectOptions(sel)}</select>
+    ${gradesListMarkup(sel, true)}
+  </div>`;
+}
+function gradesListMarkup(username, editable){
+  const list = state.db.grades[username]||[];
+  const rows = list.map(g=>`
+    <tr>
+      <td><span class="grade-chip ${gradeClass(g.grade)}">${g.grade}</span></td>
+      <td>${escapeHtml(g.subject)}</td><td>${escapeHtml(g.comment||"")}</td>
+      <td class="small-muted">${g.date}</td>
+      ${editable? `<td><button class="btn btn-outline btn-sm" onclick="adminDeleteGrade('${username}','${g.id}')">${icon("close",13)}</button></td>`:""}
+    </tr>`).join("");
+  const table = `<table><thead><tr><th>Оцінка</th><th>Предмет</th><th>Коментар</th><th>Дата</th>${editable?"<th></th>":""}</tr></thead>
+    <tbody>${rows || `<tr><td colspan="5" class="subtle">Оцінок ще немає</td></tr>`}</tbody></table>`;
+  if(!editable) return table;
+  return table + `
+    <div class="row" style="margin-top:8px;">
+      <input type="text" placeholder="Предмет" id="gr-subj">
+      <input type="number" placeholder="Оцінка (1-12)" id="gr-val" min="${GRADE_MIN}" max="${GRADE_MAX}">
+      <input type="text" placeholder="Коментар (необов'язково)" id="gr-comment">
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="addGradeFor('${username}')">+ Додати оцінку</button>`;
+}
+async function addGradeFor(username){
+  const subj = document.getElementById("gr-subj").value.trim();
+  const val = Number(document.getElementById("gr-val").value);
+  const comment = document.getElementById("gr-comment").value.trim();
+  if(!subj || !val || val<GRADE_MIN || val>GRADE_MAX){ showToast(`Вкажіть предмет і оцінку ${GRADE_MIN}-${GRADE_MAX}`); return; }
+  const teacher = state.currentUser;
+  await dbMutate(db=>{
+    ensureArr(db.grades, username).push({id:uid(), subject:subj, grade:val, comment, date:todayStr(), teacher});
+  });
+  showToast("Оцінку додано"); render();
+}
+async function adminDeleteGrade(username, id){
+  await dbMutate(db=>{ db.grades[username] = (db.grades[username]||[]).filter(g=>g.id!==id); });
+  render();
+}
+
+function adminBehavior(){
+  const students = Object.values(state.db.users).filter(u=>u.role==="student");
+  if(!students.length) return `<div class="panel"><h2>${icon("clipboard")} Поведінка</h2><div class="empty-note">Немає жодного учня.</div></div>`;
+  const sel = state.adminBehaviorStudent && state.db.users[state.adminBehaviorStudent] ? state.adminBehaviorStudent : students[0].username;
+  state.adminBehaviorStudent = sel;
+  return `<div class="panel">
+    <h2>${icon("clipboard")} Поведінка</h2>
+    <label>Учень</label>
+    <select onchange="state.adminBehaviorStudent=this.value; render();">${studentSelectOptions(sel)}</select>
+    ${behaviorMarkup(sel, true)}
+  </div>`;
+}
+function behaviorMarkup(username, editable){
+  const us = state.db.users[username];
+  const list = state.db.behavior[username]||[];
+  const rows = list.map(b=>`
+    <tr><td>${b.delta>0?icon("thumb",14):icon("warn",14)} ${b.delta>0?"+":""}${b.delta}</td><td>${escapeHtml(b.text)}</td><td class="small-muted">${b.date}</td></tr>
+  `).join("");
+  const score = us.behavior;
+  const scoreColor = score>=80?"var(--ok)":score>=50?"var(--brass)":"var(--danger)";
+  const table = `<div style="font-size:26px; font-weight:700; color:${scoreColor};">${score} / 100</div>
+    <table><thead><tr><th>Бали</th><th>Опис</th><th>Дата</th></tr></thead>
+    <tbody>${rows || `<tr><td colspan="3" class="subtle">Записів ще немає</td></tr>`}</tbody></table>`;
+  if(!editable) return table;
+  return table + `
+    <div class="row" style="margin-top:8px;">
+      <select id="bh-type"><option value="1">+ Похвала</option><option value="-1">− Зауваження</option></select>
+      <input type="number" placeholder="Бали (напр. 5)" id="bh-pts" min="1" max="50" value="5">
+      <input type="text" placeholder="Опис" id="bh-text">
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="addBehaviorFor('${username}')">+ Додати запис</button>`;
+}
+async function addBehaviorFor(username){
+  const dir = Number(document.getElementById("bh-type").value);
+  const pts = Math.abs(Number(document.getElementById("bh-pts").value))||0;
+  const text = document.getElementById("bh-text").value.trim();
+  if(!text || !pts){ showToast("Заповніть опис і бали"); return; }
+  const delta = dir*pts;
+  const teacher = state.currentUser;
+  await dbMutate(db=>{
+    ensureArr(db.behavior, username).push({id:uid(), text, delta, date:todayStr(), teacher});
+    db.users[username].behavior = Math.max(0, Math.min(100, db.users[username].behavior + delta));
+  });
+  showToast("Запис додано"); render();
+}
+
+function adminNotebooks(){
+  const entries = Object.entries(state.db.notebooks).filter(([,list])=>list && list.length);
+  if(!entries.length) return `<div class="panel"><h2>${icon("search")} Зошити учнів</h2><div class="empty-note">Ще ніхто нічого не написав.</div></div>`;
+  const blocks = entries.map(([username, list])=>{
+    const us = state.db.users[username];
+    const items = list.map(n=>{
+      const theme = NB_THEMES.find(t=>t.id===n.theme) || NB_THEMES[0];
+      const font = NB_FONTS.find(f=>f.id===n.font) || NB_FONTS[0];
+      return `<div class="nb-editor ${theme.cls}" style="font-family:${font.css}; margin-bottom:8px;">
+        <strong>${escapeHtml(n.title||"Без назви")}</strong><div style="margin-top:6px;">${sanitizeNb(n.text)}</div>
+        <div class="small-muted" style="margin-top:6px;">${n.date}</div>
+      </div>`;
+    }).join("");
+    return `<h3>${avatarBadge(us?.avatarId,24)} ${escapeHtml(us?.name||username)}</h3>${items}`;
+  }).join("");
+  return `<div class="panel"><h2>${icon("search")} Зошити учнів</h2><p class="subtle">Адміністратор бачить усі записи в зошитах усіх користувачів.</p>${blocks}</div>`;
+}
+
+function adminEconomy(){
+  const eco = state.db.economy;
+  const shopRows = eco.shop.map((it,i)=>`
+    <div class="card">
+      <div class="card-title"><span>${escapeHtml(it.name)}</span><span class="coin">${it.price} ${icon("coin",13)}</span></div>
+      <div class="small-muted">${escapeHtml(it.desc||"")}</div>
+      <div class="row" style="margin-top:6px;">
+        <input type="number" id="eco-price-${i}" value="${it.price}" min="1">
+        <button class="btn btn-outline btn-sm" onclick="adminUpdateShopPrice(${i})">Оновити ціну</button>
+      </div>
+    </div>`).join("");
+  return `<div class="panel">
+    <h2>${icon("coin")} Система «Коін»</h2>
+    <div class="flex-between">
+      <span>Статус системи коінів:</span>
+      <button class="btn ${eco.enabled?'btn-secondary':'btn-outline'} btn-sm" style="margin-top:0" onclick="adminToggleEconomy()">${eco.enabled?"Увімкнено — вимкнути":"Вимкнено — увімкнути"}</button>
+    </div>
+    <h3>Товари магазину</h3>
+    ${shopRows}
+    <h3>Видати/змінити коіни учню</h3>
+    <div class="row">
+      <select id="eco-user">${Object.values(state.db.users).filter(u=>u.role==="student").map(s=>`<option value="${s.username}">${escapeHtml(s.name)} — ${s.coins} Коін</option>`).join("")}</select>
+      <input type="number" id="eco-amount" placeholder="+10 або -10">
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="adminAdjustCoins()">Застосувати</button>
+  </div>`;
+}
+async function adminToggleEconomy(){
+  await dbMutate(db=>{ db.economy.enabled = !db.economy.enabled; });
+  render();
+}
+async function adminUpdateShopPrice(i){
+  const val = Number(document.getElementById("eco-price-"+i).value);
+  if(!val || val<1) return;
+  await dbMutate(db=>{ db.economy.shop[i].price = val; });
+  showToast("Ціну оновлено"); render();
+}
+async function adminAdjustCoins(){
+  const username = document.getElementById("eco-user").value;
+  const amount = Number(document.getElementById("eco-amount").value)||0;
+  await dbMutate(db=>{ db.users[username].coins = Math.max(0, db.users[username].coins + amount); });
+  showToast("Коіни оновлено"); render();
+}
+
+/* ============================================================
+   ВЧИТЕЛЬ
+   ============================================================ */
+function renderTeacherTab(u){
+  switch(state.tab){
+    case "classes": return teacherClassesView(u);
+    case "grades": return teacherGradesView(u);
+    case "homework": return teacherHomeworkView(u);
+    case "behavior": return teacherBehaviorView(u);
+    case "chat": return teacherChatView(u);
+    case "notebook": return renderNotebookTab(u);
+    case "announcements": return renderAnnouncements(u);
+  }
+  return "";
+}
+function wireTeacherTab(u){
+  wireNotebookTab(u);
+  if(state.tab==="chat") wireChatTab(u, currentTeacherClassId(u));
+}
+function myClassesApproved(u){ return teacherClasses(u.username).filter(c=>c.approved); }
+function currentTeacherClassId(u){
+  const mine = myClassesApproved(u);
+  if(!mine.length) return null;
+  if(state.teacherClassSel && mine.some(c=>c.id===state.teacherClassSel)) return state.teacherClassSel;
+  state.teacherClassSel = mine[0].id;
+  return state.teacherClassSel;
+}
+
+function teacherClassesView(u){
+  const mine = teacherClasses(u.username);
+  const myRequests = state.db.classRequests.filter(r=>r.teacher===u.username && r.status!=="approved");
+  const reqCards = myRequests.map(r=>`
+    <div class="card"><div class="card-title"><span>${icon("tag")} ${escapeHtml(r.name)}</span>
+    <span class="pill ${r.status==='pending'?'pill-wait':'pill-bad'}">${r.status==='pending'?'очікує схвалення':'відхилено'}</span></div></div>`).join("");
+  const cards = reqCards + mine.map(c=>{
+    const roster = studentsOfClass(c.id);
+    const free = Object.values(state.db.users).filter(x=>x.role==="student" && !x.classId);
+    return `<div class="card">
+      <div class="card-title"><span>${avatarBadge(c.avatarId||"diamond",22)} ${escapeHtml(c.name)}</span><span class="pill pill-ok">схвалено</span></div>
+      <div class="row" style="margin-top:6px;">
+        <div><label>Назва класу</label><input type="text" id="cn-${c.id}" value="${escapeHtml(c.name)}"></div>
+        <div><label>Назва чату</label><input type="text" id="ct-${c.id}" value="${escapeHtml(c.chatName||c.name)}"></div>
+      </div>
+      <label>Аватар класу</label>${avatarPickerHtml("capick-"+c.id, "ca-"+c.id, c.avatarId||"diamond")}
+      <button class="btn btn-outline btn-sm" onclick="teacherSaveClassMeta('${c.id}')">Зберегти</button>
+      <h3 style="margin-top:14px;">Учні (${roster.length})</h3>
+      ${roster.map(s=>`<div class="small-muted">${avatarBadge(s.avatarId,20)} ${escapeHtml(s.name)} <button class="btn btn-outline btn-sm" onclick="teacherRemoveStudent('${c.id}','${s.username}')">прибрати</button></div>`).join("") || '<div class="subtle">Учнів ще немає</div>'}
+      <div class="row" style="margin-top:8px;">
+        <select id="add-st-${c.id}">${free.map(s=>`<option value="${s.username}">${escapeHtml(s.name)}</option>`).join("") || '<option value="">— немає вільних учнів —</option>'}</select>
+        <button class="btn btn-secondary btn-sm" onclick="teacherAddStudent('${c.id}')">+ Додати учня</button>
+      </div>
+    </div>`;
+  }).join("") || `<div class="empty-note">У вас ще немає жодного класу.</div>`;
+
+  return `<div class="panel">
+    <h2>${icon("tag")} Мої класи</h2>
+    ${cards}
+    <h3>Створити новий клас</h3>
+    <p class="subtle">Клас з'явиться в списку після схвалення адміністратором.</p>
+    <div class="row">
+      <input type="text" id="newclass-name" placeholder="Напр. 8-Б">
+      <button class="btn btn-primary btn-sm" onclick="teacherRequestClass()">Подати запит</button>
+    </div>
+    <h3>Додати нового вчителя</h3>
+    <div class="row">
+      <input type="text" id="nt-login" placeholder="Логін">
+      <input type="text" id="nt-pass" placeholder="Пароль">
+      <input type="text" id="nt-name" placeholder="Ім'я">
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="teacherAddTeacher()">+ Додати вчителя</button>
+  </div>`;
+}
+async function teacherRequestClass(){
+  const name = document.getElementById("newclass-name").value.trim();
+  if(!name){ showToast("Вкажіть назву класу"); return; }
+  await dbMutate(db=>{
+    db.classRequests.push({id:uid(), name, teacher: state.currentUser, status:"pending"});
+  });
+  showToast("Запит надіслано адміністратору"); render();
+}
+async function teacherAddTeacher(){
+  const login = document.getElementById("nt-login").value.trim();
+  const pass = document.getElementById("nt-pass").value;
+  const name = document.getElementById("nt-name").value.trim() || login;
+  if(!validUsername(login) || !pass){ showToast("Перевірте логін і пароль"); return; }
+  let ok=true;
+  await dbMutate(db=>{
+    if(db.users[login]){ ok=false; return; }
+    db.users[login] = {username:login, password:pass, role:"teacher", name, avatarId:"bolt", nickColor:null, badge:null, coins:0, behavior:100, blocked:false, classId:null, children:[]};
+  });
+  if(!ok){ showToast("Такий логін уже існує"); return; }
+  showToast("Вчителя додано"); render();
+}
+async function teacherSaveClassMeta(classId){
+  const name = document.getElementById("cn-"+classId).value.trim();
+  const avatarId = document.getElementById("ca-"+classId).value.trim();
+  const chatName = document.getElementById("ct-"+classId).value.trim();
+  await dbMutate(db=>{
+    const c = db.classes[classId];
+    if(name) c.name=name;
+    if(avatarId) c.avatarId=avatarId;
+    if(chatName) c.chatName=chatName;
+  });
+  showToast("Збережено"); render();
+}
+async function teacherAddStudent(classId){
+  const sel = document.getElementById("add-st-"+classId).value;
+  if(!sel) return;
+  await dbMutate(db=>{
+    db.users[sel].classId = classId;
+    if(!db.classes[classId].students.includes(sel)) db.classes[classId].students.push(sel);
+  });
+  render();
+}
+async function teacherRemoveStudent(classId, username){
+  await dbMutate(db=>{
+    db.classes[classId].students = db.classes[classId].students.filter(s=>s!==username);
+    if(db.users[username].classId===classId) db.users[username].classId=null;
+  });
+  render();
+}
+
+function teacherGradesView(u){
+  const mine = myClassesApproved(u);
+  if(!mine.length) return `<div class="panel"><h2>${icon("pencil")} Оцінки</h2><div class="empty-note">У вас немає схваленого класу.</div></div>`;
+  const clsId = currentTeacherClassId(u);
+  const roster = studentsOfClass(clsId);
+  if(!roster.length) return classPickerWrap(u,mine,clsId,"teacherClassSel",`${icon("pencil")} Оцінки`,`<div class="empty-note">У класі ще немає учнів.</div>`);
+  const stSel = state.teacherGradeStudent && roster.some(s=>s.username===state.teacherGradeStudent) ? state.teacherGradeStudent : roster[0].username;
+  state.teacherGradeStudent = stSel;
+  const body = `
+    <label>Учень</label>
+    <select onchange="state.teacherGradeStudent=this.value; render();">${roster.map(s=>`<option value="${s.username}" ${s.username===stSel?"selected":""}>${escapeHtml(s.name)}</option>`).join("")}</select>
+    ${gradesListMarkup(stSel, true)}`;
+  return classPickerWrap(u,mine,clsId,"teacherClassSel",`${icon("pencil")} Оцінки`,body);
+}
+function classPickerWrap(u, mine, clsId, stateKey, title, body){
+  return `<div class="panel">
+    <h2>${title}</h2>
+    <label>Клас</label>
+    <select onchange="state.${stateKey}=this.value; render();">${mine.map(c=>`<option value="${c.id}" ${c.id===clsId?"selected":""}>${escapeHtml(c.name)}</option>`).join("")}</select>
+    ${body}
+  </div>`;
+}
+
+function teacherHomeworkView(u){
+  const mine = myClassesApproved(u);
+  if(!mine.length) return `<div class="panel"><h2>${icon("note")} Домашнє завдання</h2><div class="empty-note">У вас немає схваленого класу.</div></div>`;
+  const clsId = currentTeacherClassId(u);
+  const list = state.db.homework[clsId]||[];
+  const rows = list.map(h=>`
+    <div class="card">
+      <div class="card-title"><span>${escapeHtml(h.subject)}</span><button class="btn btn-outline btn-sm" onclick="teacherDeleteHw('${clsId}','${h.id}')">${icon("close",13)}</button></div>
+      <div>${escapeHtml(h.text)}</div>
+      <div class="small-muted">Задано: ${h.date}${h.due?" · Здати до: "+h.due:""}</div>
+    </div>`).join("") || `<div class="empty-note">Домашніх завдань ще немає.</div>`;
+  const body = `${rows}
+    <h3>Нове домашнє завдання</h3>
+    <div class="row"><input type="text" id="hw-subj" placeholder="Предмет"><input type="date" id="hw-due"></div>
+    <textarea id="hw-text" placeholder="Що потрібно зробити"></textarea>
+    <button class="btn btn-secondary btn-sm" onclick="teacherAddHw('${clsId}')">+ Додати</button>`;
+  return classPickerWrap(u,mine,clsId,"teacherClassSel",`${icon("note")} Домашнє завдання`,body);
+}
+async function teacherAddHw(classId){
+  const subj = document.getElementById("hw-subj").value.trim();
+  const due = document.getElementById("hw-due").value;
+  const text = document.getElementById("hw-text").value.trim();
+  if(!subj || !text){ showToast("Заповніть предмет і завдання"); return; }
+  await dbMutate(db=>{
+    ensureArr(db.homework, classId).push({id:uid(), subject:subj, text, due, date:todayStr(), teacher:state.currentUser});
+  });
+  showToast("Додано"); render();
+}
+async function teacherDeleteHw(classId, id){
+  await dbMutate(db=>{ db.homework[classId] = (db.homework[classId]||[]).filter(h=>h.id!==id); });
+  render();
+}
+
+function teacherBehaviorView(u){
+  const mine = myClassesApproved(u);
+  if(!mine.length) return `<div class="panel"><h2>${icon("clipboard")} Зауваження</h2><div class="empty-note">У вас немає схваленого класу.</div></div>`;
+  const clsId = currentTeacherClassId(u);
+  const roster = studentsOfClass(clsId);
+  if(!roster.length) return classPickerWrap(u,mine,clsId,"teacherClassSel",`${icon("clipboard")} Зауваження`,`<div class="empty-note">У класі ще немає учнів.</div>`);
+  const stSel = state.teacherBehStudent && roster.some(s=>s.username===state.teacherBehStudent) ? state.teacherBehStudent : roster[0].username;
+  state.teacherBehStudent = stSel;
+  const body = `
+    <label>Учень</label>
+    <select onchange="state.teacherBehStudent=this.value; render();">${roster.map(s=>`<option value="${s.username}" ${s.username===stSel?"selected":""}>${escapeHtml(s.name)}</option>`).join("")}</select>
+    ${behaviorMarkup(stSel, true)}`;
+  return classPickerWrap(u,mine,clsId,"teacherClassSel",`${icon("clipboard")} Зауваження`,body);
+}
+
+function teacherChatView(u){
+  const mine = myClassesApproved(u);
+  if(!mine.length) return `<div class="panel"><h2>${icon("chat")} Чат</h2><div class="empty-note">У вас немає схваленого класу.</div></div>`;
+  const clsId = currentTeacherClassId(u);
+  const cls = state.db.classes[clsId];
+  const body = renderChatPanel(cls);
+  return classPickerWrap(u,mine,clsId,"teacherClassSel",`${icon("chat")} Чат класу`,body);
+}
+
+/* ============================================================
+   УЧЕНЬ
+   ============================================================ */
+function renderStudentTab(u){
+  const clsId = u.classId;
+  switch(state.tab){
+    case "schedule":
+      if(!clsId) return `<div class="panel"><h2>${icon("calendar")} Розклад</h2><div class="empty-note">Вас ще не додано до жодного класу.</div></div>`;
+      return `<div class="panel"><h2>${icon("calendar")} Розклад — ${escapeHtml(classById(clsId).name)}</h2>${renderScheduleReadOnly(clsId)}</div>`;
+    case "homework":
+      if(!clsId) return `<div class="panel"><h2>${icon("note")} Домашнє завдання</h2><div class="empty-note">Вас ще не додано до жодного класу.</div></div>`;
+      return `<div class="panel"><h2>${icon("note")} Домашнє завдання</h2>${renderHomeworkReadOnly(clsId)}</div>`;
+    case "grades":
+      return `<div class="panel"><h2>${icon("pencil")} Мої оцінки</h2>${gradesListMarkup(u.username,false)}</div>`;
+    case "behavior":
+      return `<div class="panel"><h2>${icon("clipboard")} Моя поведінка</h2>${behaviorMarkup(u.username,false)}</div>`;
+    case "chat":
+      if(!clsId) return `<div class="panel"><h2>${icon("chat")} Чат класу</h2><div class="empty-note">Вас ще не додано до жодного класу.</div></div>`;
+      return `<div class="panel"><h2>${icon("chat")} ${escapeHtml(classById(clsId).chatName||classById(clsId).name)}</h2>${renderChatPanel(classById(clsId))}</div>`;
+    case "notebook": return renderNotebookTab(u);
+    case "announcements": return renderAnnouncements(u);
+    case "shop": return renderShopTab(u);
+  }
+  return "";
+}
+function wireStudentTab(u){
+  wireNotebookTab(u);
+  if(state.tab==="chat" && u.classId) wireChatTab(u, u.classId);
+}
+
+function renderScheduleReadOnly(classId){
+  const sched = state.db.schedule[classId] || {};
+  return DAYS.map(day=>{
+    const lessons = sched[day]||[];
+    const rows = lessons.map(l=>`<tr><td>${escapeHtml(l.time)}</td><td>${escapeHtml(l.subject)}</td><td>${escapeHtml(l.teacher||"")}</td></tr>`).join("");
+    return `<h3>${day}</h3><table><tbody>${rows || '<tr><td class="subtle">Уроків немає</td></tr>'}</tbody></table>`;
+  }).join("");
+}
+function renderHomeworkReadOnly(classId){
+  const list = state.db.homework[classId]||[];
+  if(!list.length) return `<div class="empty-note">Домашніх завдань ще немає.</div>`;
+  return list.slice().reverse().map(h=>`
+    <div class="card">
+      <div class="card-title">${escapeHtml(h.subject)}</div>
+      <div>${escapeHtml(h.text)}</div>
+      <div class="small-muted">Задано: ${h.date}${h.due?" · Здати до: "+h.due:""}</div>
+    </div>`).join("");
+}
+
+function renderShopTab(u){
+  const eco = state.db.economy;
+  if(!eco.enabled) return `<div class="panel"><h2>${icon("coin")} Коіни</h2><div class="empty-note">Систему коінів наразі вимкнено адміністратором.</div></div>`;
+  const myGrades = state.db.grades[u.username]||[];
+  const items = eco.shop.map(it=>{
+    let extra = "";
+    if(it.type==="nickcolor"){
+      extra = `<div class="row" style="gap:6px; flex-wrap:wrap;">${NICK_COLORS.map(c=>`
+        <span class="marker-swatch" style="background:${c}; ${state.shopColorPick===c?'box-shadow:0 0 0 2px var(--ink);':''}" onclick="state.shopColorPick='${c}'; render();"></span>`).join("")}</div>`;
+    } else if(it.type==="gradeboost"){
+      extra = `<select id="shop-grade-pick">${myGrades.map(g=>`<option value="${g.id}">${escapeHtml(g.subject)} — ${g.grade}</option>`).join("") || '<option value="">— немає оцінок —</option>'}</select>`;
+    } else if(it.type==="statusbadge"){
+      extra = `<div class="row" style="gap:6px; flex-wrap:wrap;">${BADGES.map(b=>`
+        <span onclick="state.shopBadgePick='${b.id}'; render();" title="${b.name}" style="cursor:pointer; border-radius:50%; padding:2px; border:2px solid ${state.shopBadgePick===b.id?'var(--ink)':'transparent'};">${avatarBadge(b.id,26)}</span>`).join("")}</div>`;
+    }
+    const afford = u.coins >= it.price;
+    return `<div class="card">
+      <div class="card-title"><span>${escapeHtml(it.name)}</span><span class="coin">${it.price} ${icon("coin",13)}</span></div>
+      <div class="small-muted">${escapeHtml(it.desc||"")}</div>
+      ${extra}
+      <button class="btn btn-brass btn-sm" ${afford?"":"disabled"} onclick="buyShopItem('${it.id}')">Купити</button>
+    </div>`;
+  }).join("");
+  return `<div class="panel">
+    <h2>${icon("coin")} Коіни</h2>
+    <div style="font-size:22px; font-weight:700;" class="coin">${u.coins} ${icon("coin",18)}</div>
+    <p class="subtle">Заробляй коіни за хорошу поведінку та успіхи — вчитель або адміністратор нараховує їх вручну.</p>
+    ${items}
+  </div>`;
+}
+async function buyShopItem(itemId){
+  const u = state.db.users[state.currentUser];
+  const eco = state.db.economy;
+  const item = eco.shop.find(i=>i.id===itemId);
+  if(!item) return;
+  if(u.coins < item.price){ showToast("Недостатньо коінів"); return; }
+  if(item.type==="nickcolor" && !state.shopColorPick){ showToast("Оберіть колір"); return; }
+  if(item.type==="gradeboost"){
+    const gid = document.getElementById("shop-grade-pick").value;
+    if(!gid){ showToast("Немає оцінки для покращення"); return; }
+    await dbMutate(db=>{
+      const us = db.users[state.currentUser];
+      const g = (db.grades[us.username]||[]).find(x=>x.id===gid);
+      if(!g || g.grade>=GRADE_MAX){ return; }
+      g.grade = Math.min(GRADE_MAX, g.grade+1);
+      us.coins -= item.price;
+    });
+    showToast("Оцінку покращено!"); render(); return;
+  }
+  if(item.type==="statusbadge"){
+    if(!state.shopBadgePick){ showToast("Оберіть значок"); return; }
+    await dbMutate(db=>{
+      const us = db.users[state.currentUser];
+      us.badge = state.shopBadgePick; us.coins -= item.price;
+    });
+    showToast("Значок встановлено"); render(); return;
+  }
+  if(item.type==="nickcolor"){
+    const color = state.shopColorPick;
+    await dbMutate(db=>{
+      const us = db.users[state.currentUser];
+      us.nickColor = color; us.coins -= item.price;
+    });
+    showToast("Колір ніку змінено"); render(); return;
+  }
+}
+
+/* ============================================================
+   БАТЬКИ
+   ============================================================ */
+function renderParentTab(u){
+  const kids = parentChildren(u);
+  if(!kids.length) return `<div class="panel"><h2>Ласкаво просимо</h2><div class="empty-note">Адміністратор ще не прив'язав до вас жодну дитину.</div></div>`;
+  const kidSel = state.activeChild && kids.some(k=>k.username===state.activeChild) ? state.activeChild : kids[0].username;
+  state.activeChild = kidSel;
+  const kid = state.db.users[kidSel];
+  const picker = kids.length>1 ? `
+    <label>Дитина</label>
+    <select onchange="state.activeChild=this.value; render();">${kids.map(k=>`<option value="${k.username}" ${k.username===kidSel?"selected":""}>${escapeHtml(k.name)}</option>`).join("")}</select>` : `<p class="subtle">Дитина: ${escapeHtml(kid.name)}</p>`;
+
+  let body="";
+  switch(state.tab){
+    case "grades": body = gradesListMarkup(kidSel,false); break;
+    case "behavior": body = behaviorMarkup(kidSel,false); break;
+    case "homework": body = kid.classId ? renderHomeworkReadOnly(kid.classId) : `<div class="empty-note">Дитину ще не додано до класу.</div>`; break;
+    case "schedule": body = kid.classId ? renderScheduleReadOnly(kid.classId) : `<div class="empty-note">Дитину ще не додано до класу.</div>`; break;
+    case "chat":
+      body = kid.classId ? renderChatPanel(classById(kid.classId)) : `<div class="empty-note">Дитину ще не додано до класу.</div>`;
+      break;
+    case "announcements": return renderAnnouncements(u);
+  }
+  const titles = {grades:`${icon("pencil")} Оцінки дитини`, behavior:`${icon("clipboard")} Поведінка`, homework:`${icon("note")} Домашнє завдання`, schedule:`${icon("calendar")} Розклад`, chat:`${icon("chat")} Чат класу`};
+  return `<div class="panel"><h2>${titles[state.tab]||""}</h2>${picker}${body}</div>`;
+}
+function wireParentTab(u){
+  const kids = parentChildren(u);
+  const kid = kids.find(k=>k.username===state.activeChild) || kids[0];
+  if(state.tab==="chat" && kid && kid.classId) wireChatTab(u, kid.classId);
+}
+
+/* ============================================================
+   ЧАТ КЛАСУ (спільний компонент для вчителя/учня/батьків)
+   ============================================================ */
+function renderChatPanel(cls){
+  if(!cls) return `<div class="empty-note">Клас не знайдено.</div>`;
+  return `
+    <div id="chat-box" class="chat-box"><div class="subtle">Завантаження повідомлень…</div></div>
+    <div class="row">
+      <input type="text" id="chat-input" placeholder="Повідомлення для класу…">
+      <button class="btn btn-primary btn-sm" onclick="sendChatMsg('${cls.id}')">Надіслати</button>
+    </div>
+    <div class="small-muted" style="margin-top:6px;">Оновлюється автоматично кожні 5 секунд.</div>
+  `;
+}
+function stopChatPoll(){
+  if(state.chatPoll){ clearInterval(state.chatPoll); state.chatPoll=null; }
+}
+async function wireChatTab(u, classId){
+  if(!classId) return;
+  await refreshChatBox(classId);
+  stopChatPoll();
+  state.chatPoll = setInterval(()=>refreshChatBox(classId), 5000);
+  const inp = document.getElementById("chat-input");
+  if(inp) inp.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); sendChatMsg(classId); } });
+}
+async function refreshChatBox(classId){
+  const box = document.getElementById("chat-box");
+  if(!box) return;
+  const msgs = await chatLoad(classId);
+  const me = state.currentUser;
+  box.innerHTML = msgs.map(m=>{
+    const sender = state.db.users[m.from];
+    const mine = m.from===me;
+    const label = sender ? avatarBadge(sender.avatarId,18)+" "+nickSpan(sender) : escapeHtml(m.from);
+    return `<div class="msg ${mine?'mine':''}">
+      <div class="meta">${label} · ${roleName(m.role)} · ${escapeHtml(m.time)}</div>
+      <div class="bubble">${escapeHtml(m.text)}</div>
+    </div>`;
+  }).join("") || `<div class="subtle">Повідомлень ще немає. Напишіть перше!</div>`;
+  box.scrollTop = box.scrollHeight;
+}
+async function sendChatMsg(classId){
+  const inp = document.getElementById("chat-input");
+  if(!inp) return;
+  const text = inp.value.trim();
+  if(!text) return;
+  const u = state.db.users[state.currentUser];
+  await chatAppend(classId, {
+    from: state.currentUser, role: u.role, text,
+    time: new Date().toLocaleTimeString("uk-UA",{hour:"2-digit",minute:"2-digit"})
+  });
+  inp.value="";
+  await refreshChatBox(classId);
+}
+
+/* ============================================================
+   ОСОБИСТИЙ ЗОШИТ (спільний компонент)
+   ============================================================ */
+function renderNotebookTab(u){
+  const list = state.db.notebooks[u.username]||[];
+  const themeObj = NB_THEMES.find(t=>t.id===state.nbTheme) || NB_THEMES[0];
+  const fontObj = NB_FONTS.find(f=>f.id===state.nbFont) || NB_FONTS[0];
+
+  const listHtml = list.slice().reverse().map(n=>`
+    <div class="card">
+      <div class="card-title">
+        <span>${escapeHtml(n.title||"Без назви")}</span>
+        <span>
+          <button class="btn btn-outline btn-sm" onclick="nbEdit('${n.id}')">Відкрити</button>
+          <button class="btn btn-outline btn-sm" onclick="nbDelete('${n.id}')">${icon("close",13)}</button>
+        </span>
+      </div>
+      <div class="small-muted">${n.date}</div>
+    </div>`).join("") || `<div class="empty-note">Записів ще немає.</div>`;
+
+  return `<div class="panel">
+    <h2>${icon("book")} Мій зошит</h2>
+    ${listHtml}
+    <button class="btn btn-secondary btn-sm" onclick="nbNew()">+ Новий запис</button>
+    <h3>${state.nbEditingId ? "Редагування запису" : "Новий запис"}</h3>
+    <label>Заголовок</label>
+    <input type="text" id="nb-title" value="${escapeHtml(state.nbDraftTitle||'')}" oninput="state.nbDraftTitle=this.value;">
+    <label>Вигляд сторінки</label>
+    <div class="row" style="gap:6px; flex-wrap:wrap;">
+      ${NB_THEMES.map(t=>`<div class="theme-swatch ${t.cls} ${t.id===state.nbTheme?'sel':''}" title="${t.name}" onmousedown="event.preventDefault()" onclick="state.nbTheme='${t.id}'; render();"></div>`).join("")}
+    </div>
+    <label>Шрифт</label>
+    <div class="row" style="gap:6px; flex-wrap:wrap;">
+      ${NB_FONTS.map(f=>`<div class="font-opt ${f.id===state.nbFont?'sel':''}" style="font-family:${f.css}" onmousedown="event.preventDefault()" onclick="state.nbFont='${f.id}'; render();">${f.name}</div>`).join("")}
+    </div>
+    <label>Маркер — виділи текст у зошиті, потім натисни колір</label>
+    <div class="row" style="gap:8px;">
+      ${MARKER_COLORS.map(c=>`<span class="marker-swatch" style="background:${c}" onmousedown="event.preventDefault()" onclick="nbMark('${c}')"></span>`).join("")}
+    </div>
+    <div id="nb-editor" class="nb-editor ${themeObj.cls}" style="font-family:${fontObj.css}; margin-top:8px;" contenteditable="true" oninput="state.nbDraftText=this.innerHTML;">${state.nbDraftText||""}</div>
+    <button class="btn btn-primary btn-sm" onclick="nbSave()">Зберегти запис</button>
+  </div>`;
+}
+function wireNotebookTab(u){ /* усе підключено через inline-атрибути в розмітці */ }
+function nbNew(){
+  state.nbEditingId = null;
+  state.nbDraftTitle = "";
+  state.nbDraftText = "";
+  render();
+}
+function nbEdit(id){
+  const u = state.currentUser;
+  const entry = (state.db.notebooks[u]||[]).find(n=>n.id===id);
+  if(!entry) return;
+  state.nbEditingId = id;
+  state.nbDraftTitle = entry.title;
+  state.nbDraftText = entry.text;
+  state.nbTheme = entry.theme;
+  state.nbFont = entry.font;
+  render();
+}
+function nbMark(color){
+  const ed = document.getElementById("nb-editor");
+  if(ed) ed.focus();
+  try{ document.execCommand("hiliteColor", false, color); }
+  catch(e){ try{ document.execCommand("backColor", false, color); }catch(e2){} }
+  if(ed) state.nbDraftText = ed.innerHTML;
+}
+async function nbSave(){
+  const titleEl = document.getElementById("nb-title");
+  const edEl = document.getElementById("nb-editor");
+  const title = titleEl ? titleEl.value.trim() : "";
+  const text = edEl ? edEl.innerHTML : "";
+  const theme = state.nbTheme, font = state.nbFont;
+  const username = state.currentUser;
+  await dbMutate(db=>{
+    const list = ensureArr(db.notebooks, username);
+    if(state.nbEditingId){
+      const entry = list.find(n=>n.id===state.nbEditingId);
+      if(entry){ entry.title=title; entry.text=text; entry.theme=theme; entry.font=font; entry.date=todayStr(); }
+    } else {
+      const id = uid();
+      list.push({id, title, text, theme, font, date: todayStr()});
+      state.nbEditingId = id;
+    }
+  });
+  state.nbDraftTitle = title; state.nbDraftText = text;
+  showToast("Запис збережено"); render();
+}
+async function nbDelete(id){
+  const username = state.currentUser;
+  await dbMutate(db=>{ db.notebooks[username] = (db.notebooks[username]||[]).filter(n=>n.id!==id); });
+  if(state.nbEditingId===id){ state.nbEditingId=null; state.nbDraftTitle=""; state.nbDraftText=""; }
+  showToast("Видалено"); render();
+}
+
+/* ============================================================
+   ОГОЛОШЕННЯ ШКОЛИ (спільний компонент)
+   ============================================================ */
+function renderAnnouncements(u){
+  const canManage = u.role === "admin";
+  const list = state.db.announcements.slice().sort((a,b)=> (b.pinned?1:0)-(a.pinned?1:0));
+  const items = list.map(a=>`
+    <div class="card">
+      <div class="card-title"><span>${a.pinned?icon("pin",14)+" ":""}${escapeHtml(a.title)}</span>${canManage?`<button class="btn btn-outline btn-sm" onclick="annDelete('${a.id}')">${icon("close",13)}</button>`:""}</div>
+      <div>${escapeHtml(a.text)}</div>
+      <div class="small-muted">${escapeHtml(a.author)} · ${a.date}</div>
+      ${canManage?`<button class="btn btn-outline btn-sm" style="margin-top:6px;" onclick="annTogglePin('${a.id}')">${a.pinned?"Відкріпити":"Закріпити"}</button>`:""}
+    </div>`).join("") || `<div class="empty-note">Оголошень ще немає.</div>`;
+  const form = canManage ? `
+    <h3>Нове оголошення</h3>
+    <input type="text" id="ann-title" placeholder="Заголовок">
+    <textarea id="ann-text" placeholder="Текст оголошення"></textarea>
+    <button class="btn btn-secondary btn-sm" onclick="annAdd()">+ Опублікувати</button>` : "";
+  return `<div class="panel"><h2>${icon("megaphone")} Оголошення школи</h2>${items}${form}</div>`;
+}
+async function annAdd(){
+  const titleEl = document.getElementById("ann-title");
+  const textEl = document.getElementById("ann-text");
+  const title = titleEl.value.trim(), text = textEl.value.trim();
+  if(!title || !text){ showToast("Заповніть заголовок і текст"); return; }
+  const u = state.db.users[state.currentUser];
+  await dbMutate(db=>{ db.announcements.push({id:uid(), title, text, date:todayStr(), author:u.name, pinned:false}); });
+  showToast("Опубліковано"); render();
+}
+async function annDelete(id){
+  await dbMutate(db=>{ db.announcements = db.announcements.filter(a=>a.id!==id); });
+  render();
+}
+async function annTogglePin(id){
+  await dbMutate(db=>{ const a = db.announcements.find(x=>x.id===id); if(a) a.pinned=!a.pinned; });
+  render();
+}
+
+/* ============================================================
+   ПІДТВЕРДЖЕННЯ ВИДАЛЕННЯ (власне модальне вікно — window.confirm
+   може блокуватися в пісочниці артефакту)
+   ============================================================ */
+function askConfirm(message, onYes){
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "position:fixed;inset:0;background:rgba(43,38,32,0.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;";
+  wrap.innerHTML = `<div style="background:var(--paper);padding:20px;border-radius:4px;max-width:300px;box-shadow:0 6px 24px rgba(0,0,0,0.3); border:1px solid var(--line);">
+    <p style="margin:0 0 14px;">${escapeHtml(message)}</p>
+    <div class="row">
+      <button class="btn btn-outline btn-sm" id="cf-no">Скасувати</button>
+      <button class="btn btn-danger btn-sm" id="cf-yes">Так, видалити</button>
+    </div>
+  </div>`;
+  document.body.appendChild(wrap);
+  wrap.querySelector("#cf-no").onclick = ()=>wrap.remove();
+  wrap.querySelector("#cf-yes").onclick = ()=>{ wrap.remove(); onYes(); };
+}
+
+/* ============================================================
+   СТАРТ ЗАСТОСУНКУ
+   ============================================================ */
+(async function init(){
+  state.db = await dbLoad();
+  if(!AUTH_ENABLED && state.db.users[DEV_AUTOLOGIN_USER]){
+    state.currentUser = DEV_AUTOLOGIN_USER;
+  }
+  render();
+})();
+</script>
+</body>
+</html>
