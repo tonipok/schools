@@ -1,0 +1,34 @@
+}
+
+/* ============================================================
+   ПІДТВЕРДЖЕННЯ ВИДАЛЕННЯ (власне модальне вікно — window.confirm
+   може блокуватися в пісочниці артефакту)
+   ============================================================ */
+function askConfirm(message, onYes){
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "position:fixed;inset:0;background:rgba(43,38,32,0.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;";
+  wrap.innerHTML = `<div style="background:var(--paper);padding:20px;border-radius:4px;max-width:300px;box-shadow:0 6px 24px rgba(0,0,0,0.3); border:1px solid var(--line);">
+    <p style="margin:0 0 14px;">${escapeHtml(message)}</p>
+    <div class="row">
+      <button class="btn btn-outline btn-sm" id="cf-no">Скасувати</button>
+      <button class="btn btn-danger btn-sm" id="cf-yes">Так, видалити</button>
+    </div>
+  </div>`;
+  document.body.appendChild(wrap);
+  wrap.querySelector("#cf-no").onclick = ()=>wrap.remove();
+  wrap.querySelector("#cf-yes").onclick = ()=>{ wrap.remove(); onYes(); };
+}
+
+/* ============================================================
+   СТАРТ ЗАСТОСУНКУ
+   ============================================================ */
+(async function init(){
+  state.db = await dbLoad();
+  if(!AUTH_ENABLED && state.db.users[DEV_AUTOLOGIN_USER]){
+    state.currentUser = DEV_AUTOLOGIN_USER;
+  }
+  render();
+})();
+</script>
+</body>
+</html>
